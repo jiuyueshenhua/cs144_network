@@ -32,14 +32,14 @@ public:
 
   Wrap32 operator+( uint32_t n ) const { return Wrap32 { raw_value_ + n }; }
   bool operator==( const Wrap32& other ) const { return raw_value_ == other.raw_value_; }
-  int64_t lessThan( const Wrap32& other, const Wrap32& ISN ) const
+  bool lessThan( const Wrap32& other, const Wrap32& ISN ) const
   {
     uint64_t base = 1LL << 32;
     uint32_t offseta = ( raw_value_ - ISN.raw_value_ + base ) % base;
     uint32_t offsetb = ( other.raw_value_ - ISN.raw_value_ + base ) % base;
     return offseta < offsetb;
   }
-  int diff( const Wrap32& other, const Wrap32& ISN ) const
+  int64_t diff( const Wrap32& other, const Wrap32& ISN ) const
   {
     uint64_t base = 1LL << 32;
     uint32_t offseta = ( raw_value_ - ISN.raw_value_ + base ) % base;

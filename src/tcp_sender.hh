@@ -60,8 +60,8 @@ private:
   uint64_t send_absSeqno_ {}; // 下一个待发送的绝对序列号
   uint64_t ack_absSeqno_ {};  // 下一个待确认的序列号
   uint64_t RTO_ms_;
-  bool IsWindowEmpty { false };
-  bool EmptySended {false};
+   bool IsWindowEmpty { false };
+//   bool EmptySended {false};
   bool fined {false};
 
   struct

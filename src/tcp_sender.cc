@@ -26,6 +26,7 @@ void TCPSender::push( const TransmitFunction& transmit )
 
   // Your code here.
   if ( input_.has_error() ) {
+    // !app->Sender的流有意外，在Send->Rec 的流发生该包
     TCPSenderMessage mes;
     mes.seqno = Wrap32::wrap( send_absSeqno_, isn_ );
     mes.RST = true;
@@ -33,7 +34,7 @@ void TCPSender::push( const TransmitFunction& transmit )
     return;
   }
 
-  if ( fined ) {
+  if ( fined ) { //! 在push里，只发送没有发送过的数据
     return;
   }
 
@@ -42,10 +43,10 @@ void TCPSender::push( const TransmitFunction& transmit )
     input_.reader().pop( input_.reader().peek().size() );
   }
 
-  if ( IsWindowEmpty && !EmptySended ) {
-    last_win_size_ = 1;
-    EmptySended = true;
-  }
+  //   if ( IsWindowEmpty && !EmptySended ) {
+  //     last_win_size_ = 1;
+  //     EmptySended = true;
+  //   }
 
   // std::set<TCPSenderMessage> meses;
   bool hasSYN = send_absSeqno_ == 0;
@@ -56,19 +57,21 @@ void TCPSender::push( const TransmitFunction& transmit )
   //   std::cout << "sz: " << last_win_size_ << " data " << hasData << "\n";
   //   std::cout << outstanding_cache_.buf_ << "\n";
 
+  // 发送数据报
   while ( hasData || hasSYN || hasFin ) {
+
+    
     size_t pay_sz
       = std::min( outstanding_cache_.buf_.size() - outstanding_cache_.nextsend_id, TCPConfig::MAX_PAYLOAD_SIZE );
     pay_sz = std::min( pay_sz, static_cast<size_t>( last_win_size_ ) );
     // 加载到数据段
-    TCPSenderMessage smes;
+    // 这里的区间用 head，size表示
+    TCPSenderMessage smes;    
     smes.payload = outstanding_cache_.buf_.substr( outstanding_cache_.nextsend_id, pay_sz );
     smes.seqno = Wrap32::wrap( send_absSeqno_, isn_ );
 
     outstanding_cache_.nextsend_id += pay_sz;
     last_win_size_ -= pay_sz;
-
-    hasData = outstanding_cache_.nextsend_id < outstanding_cache_.buf_.size() && last_win_size_ > 0;
 
     outstanding_cache_.segmentHead_timer[send_absSeqno_] = 0; // 存储端头
     outstanding_cache_.SeqnoToAbsSeqno[smes.seqno] = send_absSeqno_;
@@ -92,11 +95,12 @@ void TCPSender::push( const TransmitFunction& transmit )
       last_win_size_--;
       fined = true;
     }
-    // std::cout << smes.payload << "\n";
+    hasData = outstanding_cache_.nextsend_id < outstanding_cache_.buf_.size() && last_win_size_ > 0;
+
     transmit( smes );
   }
-  if ( IsWindowEmpty )
-    last_win_size_ = 0;
+  //   if ( IsWindowEmpty )
+  //     last_win_size_ = 0;
 }
 
 TCPSenderMessage TCPSender::make_empty_message() const
@@ -111,6 +115,7 @@ TCPSenderMessage TCPSender::make_empty_message() const
 void TCPSender::receive( const TCPReceiverMessage& msg )
 {
   if ( msg.RST ) {
+    //? 提醒app不必再输入数据了？
     input_.set_error();
     return;
   }
@@ -119,12 +124,12 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
   //   Your code here.
 
   IsWindowEmpty = msg.window_size == 0;
-  EmptySended = false;
+  //   EmptySended = false;
+  //! 注意有先收到包，再发送syn的情况
   if ( !msg.ackno.has_value() ) {
     last_win_size_ = msg.window_size;
     return;
   }
-  //! 注意会先收到空包的情况
 
   bool valid = ( outstanding_cache_.SeqnoToAbsSeqno.contains( msg.ackno.value() ) )
                || msg.ackno->unwrap( isn_, send_absSeqno_ ) == send_absSeqno_;
@@ -169,9 +174,8 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
     p.second = 0;
   }
 
-  last_win_size_ = msg.window_size;
-
-  // std::cout << last_win_size_ << '\n';
+  last_win_size_ = std::max( msg.window_size, static_cast<uint16_t>( 1 ) );
+  // 遇到大小为0的窗口，按大小为1来处理
 }
 
 void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& transmit )
