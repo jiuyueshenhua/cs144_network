@@ -54,12 +54,12 @@ private:
   // Variables initialized in constructor
   ByteStream input_; //* 源于应用程序的流
   Wrap32 isn_;       //! Wrap32
-  uint64_t initial_RTO_ms_;
+  uint64_t initial_RTO_ms_ {};
 
   uint32_t last_win_size_ { 1 };
   uint64_t send_absSeqno_ {}; // 下一个待发送的绝对序列号
   uint64_t ack_absSeqno_ {};  // 下一个待确认的序列号
-  uint64_t RTO_ms_;
+  uint64_t RTO_ms_ {};
    bool IsWindowEmpty { false };
 //   bool EmptySended {false};
   bool fined {false};

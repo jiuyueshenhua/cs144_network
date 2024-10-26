@@ -49,9 +49,9 @@ public:
 private:
   ByteStream output_;            // the Reassembler writes to this ByteStream
                                  //
-  std::string buf_unorderedByte; // 存储乱序字节块;通信流中可写入部分的副本
-  uint64_t bytes_pendingNum;     // reac临时缓存的字节数
-  uint64_t Bstream_nextByte;     // 通信流的下一个字节数
-  uint64_t close_ = false;
-  std::string buf_flags;
+  std::string buf_unorderedByte {}; // 存储乱序字节块;通信流中可写入部分的副本
+  uint64_t bytes_pendingNum {};     // reac临时缓存的字节数
+  uint64_t Bstream_nextByte {};     // 通信流的下一个字节数
+  uint64_t close_ {false} ;
+  std::string buf_flags {};
 };

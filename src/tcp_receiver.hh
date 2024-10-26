@@ -31,7 +31,7 @@ public:
 
 private:
   Reassembler reassembler_;
-  std::optional<Wrap32> ISN; // chu
+  std::optional<Wrap32> ISN {}; // chu
   uint64_t abosulte_nextSeq {};
 
   bool syned_ {};
