@@ -1,11 +1,11 @@
 #include "socket.hh"
 
+#include "tcp_minnow_socket.hh"
 #include <cstdlib>
 #include <format>
 #include <iostream>
 #include <span>
 #include <string>
-
 using namespace std;
 
 void get_URL( const string& host, const string& path )
@@ -13,7 +13,7 @@ void get_URL( const string& host, const string& path )
   //   cerr << "Function called: get_URL(" << host << ", " << path << ")\n";
   //   cerr << "Warning: get_URL() has not been implemented yet.\n";
   Address addr( host, "http" );
-  TCPSocket tcpsck;
+  CS144TCPSocket tcpsck;
   tcpsck.connect( addr );
   string content = format( "GET {} HTTP/1.1\r\n"
                            "Host: {}\r\n"

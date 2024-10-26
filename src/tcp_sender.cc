@@ -54,8 +54,6 @@ void TCPSender::push( const TransmitFunction& transmit )
                 && last_win_size_;
   bool hasData = outstanding_cache_.nextsend_id < outstanding_cache_.buf_.size() && last_win_size_ > 0;
 
-  //   std::cout << "sz: " << last_win_size_ << " data " << hasData << "\n";
-  //   std::cout << outstanding_cache_.buf_ << "\n";
 
   // 发送数据报
   while ( hasData || hasSYN || hasFin ) {
@@ -187,7 +185,6 @@ void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& trans
 
   for ( auto& p : outstanding_cache_.segmentHead_timer ) {
     p.second += ms_since_last_tick;
-    // std::cout<<p.first<<"  "<<p.second<<"\n";
   }
 
   auto fir_iter = outstanding_cache_.segmentHead_timer.begin();
