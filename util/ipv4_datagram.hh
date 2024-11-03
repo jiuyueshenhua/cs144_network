@@ -22,6 +22,7 @@ struct IPv4Datagram
   void serialize( Serializer& serializer ) const
   {
     header.serialize( serializer );
+    //? 不是有对应的接口吗？
     for ( const auto& x : payload ) {
       serializer.buffer( x );
     }

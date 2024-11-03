@@ -38,7 +38,7 @@ void ARPMessage::parse( Parser& parser )
   parser.integer( protocol_address_size );
   parser.integer( opcode );
 
-  if ( not supported() ) {
+  if ( not supported() ) {//? 为什么要加载数据了才检查是否支持？
     parser.set_error();
     return;
   }

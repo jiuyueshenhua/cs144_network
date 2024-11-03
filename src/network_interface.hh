@@ -1,9 +1,13 @@
 #pragma once
 
+#include <cstdint>
+#include <map>
 #include <queue>
-
+#include <unordered_map>
+#include <vector>
 #include "address.hh"
 #include "ethernet_frame.hh"
+#include "ethernet_header.hh"
 #include "ipv4_datagram.hh"
 
 // A "network interface" that connects IP (the internet layer, or network layer)
@@ -41,9 +45,10 @@ public:
   // Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer)
   // addresses
   NetworkInterface( std::string_view name,
-                    std::shared_ptr<OutputPort> port,
+                    std::shared_ptr<OutputPort> port, 
                     const EthernetAddress& ethernet_address,
                     const Address& ip_address );
+                    //? 智能指针类的对象可以值传递吗？
 
   // Sends an Internet datagram, encapsulated in an Ethernet frame (if it knows the Ethernet destination
   // address). Will need to use [ARP](\ref rfc::rfc826) to look up the Ethernet destination address for the next
@@ -66,11 +71,12 @@ public:
   std::queue<InternetDatagram>& datagrams_received() { return datagrams_received_; }
 
 private:
+void send_ipdatagram(const InternetDatagram& dgram, const uint32_t next_hop);
   // Human-readable name of the interface
   std::string name_;
 
   // The physical output port (+ a helper function `transmit` that uses it to send an Ethernet frame)
-  std::shared_ptr<OutputPort> port_;
+  std::shared_ptr<OutputPort> port_;//?
   void transmit( const EthernetFrame& frame ) const { port_->transmit( *this, frame ); }
 
   // Ethernet (known as hardware, network-access-layer, or link-layer) address of the interface
@@ -81,4 +87,13 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+
+  uint64_t time_ms_; 
+  std::unordered_map<uint32_t, EthernetAddress> ipAddrToEther_ ;//缓存表
+  std::unordered_map<uint32_t, uint64_t> ipToeth_lives_times_;//缓存表项的生存时间
+
+  std::unordered_map<uint32_t, uint64_t> waitedDatagrams_lives_;// 等待arp reply的包
+  std::map<uint32_t,InternetDatagram> ip_datagram_waited;
+
+  //每个映射存活30s
 };

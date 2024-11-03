@@ -142,9 +142,10 @@ public:
     } else {
       out = static_cast<T>( 0 );
       for ( size_t i = 0; i < sizeof( T ); i++ ) {
-        out <<= 8;
-        out |= static_cast<uint8_t>( input_.peek().front() );
-        input_.remove_prefix( 1 );
+        out <<= 8;//? 为何要右移？ out=0,这不是无效果吗？
+        //! 大端序
+        out |= static_cast<uint8_t>( input_.peek().front() );        
+        input_.remove_prefix( 1 );        
       }
     }
   }
@@ -185,6 +186,8 @@ public:
 
     for ( uint64_t i = 0; i < len; ++i ) {
       const uint8_t byte_val = val >> ( ( len - i - 1 ) * 8 );
+      //! 右移
+      //! 长赋短，从最低位开始赋值
       buffer_.push_back( byte_val );
     }
   }

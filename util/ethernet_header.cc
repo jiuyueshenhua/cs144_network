@@ -63,6 +63,7 @@ void EthernetHeader::serialize( Serializer& serializer ) const
   for ( const auto& b : dst ) {
     serializer.integer( b );
   }
+  //? 为何不flush？
 
   // write source address
   for ( const auto& b : src ) {
