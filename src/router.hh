@@ -1,8 +1,14 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
+#include <unordered_map>
+#include <utility>
 
+#include "address.hh"
 #include "exception.hh"
 #include "network_interface.hh"
 
@@ -34,5 +40,9 @@ public:
 
 private:
   // The router's collection of network interfaces
-  std::vector<std::shared_ptr<NetworkInterface>> _interfaces {};
+  std::vector<std::shared_ptr<NetworkInterface>> _interfaces {};  
+  using net_id = std::pair<uint8_t, uint32_t>;
+  using hop_info = std::pair<std::optional<Address>, size_t>;
+  std::map<net_id, hop_info, std::greater<net_id>> _forward_table;
+  //todo 先写简单的，再优化
 };

@@ -31,6 +31,7 @@
 // the network interface passes it up the stack. If it's an ARP
 // request or reply, the network interface processes the frame
 // and learns or replies as necessary.
+using Rawipaddr = uint32_t;  
 class NetworkInterface
 {
 public:
@@ -88,12 +89,13 @@ void send_ipdatagram(const InternetDatagram& dgram, const uint32_t next_hop);
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
 
-  uint64_t time_ms_; 
-  std::unordered_map<uint32_t, EthernetAddress> ipAddrToEther_ ;//缓存表
-  std::unordered_map<uint32_t, uint64_t> ipToeth_lives_times_;//缓存表项的生存时间
+  //uint64_t time_ms_;
+  //* 可以考虑结构体包裹一下                                                                                                                                
+  std::unordered_map<Rawipaddr, EthernetAddress> ipAddrToEther_ ;//缓存表
+  std::unordered_map<Rawipaddr, uint64_t> ipToeth_lives_times_;//缓存表项的生存时间
 
-  std::unordered_map<uint32_t, uint64_t> waitedDatagrams_lives_;// 等待arp reply的包
-  std::map<uint32_t,InternetDatagram> ip_datagram_waited;
+  std::unordered_map<Rawipaddr, uint64_t> waitedDatagrams_lives_;// 等待arp reply的包
+  std::map<Rawipaddr,InternetDatagram> ip_datagram_waited;
 
   //每个映射存活30s
 };

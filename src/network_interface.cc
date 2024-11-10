@@ -1,5 +1,7 @@
 #include <cstdint>
 #include <iostream>
+#include <map>
+#include <ratio>
 #include <utility>
 
 #include "arp_message.hh"
@@ -44,11 +46,10 @@ void NetworkInterface::send_ipdatagram( const InternetDatagram& dgram, const uin
 void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Address& next_hop )
 {
   // Your code here.
-  (void)dgram;
-  (void)next_hop;
-  if ( ipAddrToEther_.contains( next_hop.ipv4_numeric() ) ) {
-    send_ipdatagram( dgram, next_hop.ipv4_numeric() );
-  } else if(not waitedDatagrams_lives_.contains(next_hop.ipv4_numeric())) {
+  Rawipaddr next_hop_ip=next_hop.ipv4_numeric();
+  if ( ipAddrToEther_.contains( next_hop_ip ) ) {
+    send_ipdatagram( dgram, next_hop_ip );
+  } else if(not waitedDatagrams_lives_.contains(next_hop_ip)) {
 
     // 制作arp 消息
     ARPMessage arp_message;
@@ -56,8 +57,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
     arp_message.sender_ip_address = ip_address_.ipv4_numeric();
     arp_message.sender_ethernet_address = ethernet_address_;
 
-    arp_message.target_ip_address = next_hop.ipv4_numeric();
-    //arp_message.target_ethernet_address = ETHERNET_BROADCAST;
+    arp_message.target_ip_address = next_hop_ip;
 
     EthernetFrame ethframe;
     ethframe.header.src = ethernet_address_;
@@ -65,10 +65,10 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
     ethframe.header.type = EthernetHeader::TYPE_ARP;
     ethframe.payload = serialize( arp_message );
 
-    ip_datagram_waited[next_hop.ipv4_numeric()] = dgram;
-    waitedDatagrams_lives_[next_hop.ipv4_numeric()]=0;
+    ip_datagram_waited[next_hop_ip] = dgram;
+    waitedDatagrams_lives_[next_hop_ip]=0;
 
-    port_->transmit( *this, ethframe );
+    port_->transmit( *this, ethframe );//? 为什么这样做？谁在提供？谁在调用？
   }
 }
 
@@ -86,7 +86,7 @@ void NetworkInterface::recv_frame( const EthernetFrame& frame )
   } else if ( frame.header.type == EthernetHeader::TYPE_ARP ) {
     ARPMessage receive_arpmes;
     parse(receive_arpmes, frame.payload);
-    //?? 如果是收到缓存表里已有的呢？
+    
     ipAddrToEther_[receive_arpmes.sender_ip_address] = receive_arpmes.sender_ethernet_address;
     ipToeth_lives_times_[receive_arpmes.sender_ip_address] = 0;
 
@@ -113,6 +113,8 @@ void NetworkInterface::recv_frame( const EthernetFrame& frame )
   }
 }
 
+
+
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void NetworkInterface::tick( const size_t ms_since_last_tick )
 {
@@ -120,7 +122,7 @@ void NetworkInterface::tick( const size_t ms_since_last_tick )
   const uint64_t live_limit_ms = 30 * 1000; // 30s
   const uint64_t wait_limit_ms = 5*1000; // 5s
 
-  time_ms_ += ms_since_last_tick;
+  //time_ms_ += ms_since_last_tick;
 
   for ( auto iter = ipToeth_lives_times_.begin(); iter != ipToeth_lives_times_.end(); ) {
     iter->second += ms_since_last_tick;
